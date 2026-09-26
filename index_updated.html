@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Missing Words — Telegram Game</title>
+<style>
+:root{
+  --bg:#0b1020;--panel:#121a2e;--panel2:#17223a;--text:#f7f8fc;--muted:#9aa7c2;
+  --primary:#6d5dfc;--primary2:#8a7dff;--green:#21c77a;--yellow:#ffbf47;--red:#ff5d73;
+  --line:rgba(255,255,255,.09);--shadow:0 12px 35px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:radial-gradient(circle at top,#1b2450 0,#0b1020 45%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}
+button,input,select{font:inherit}
+button{border:0;cursor:pointer}
+.app{max-width:720px;margin:auto;min-height:100vh;padding-bottom:86px}
+.top{position:sticky;top:0;z-index:20;background:rgba(11,16,32,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:14px 16px}
+.brand{display:flex;justify-content:space-between;align-items:center}
+.brand h1{font-size:20px;margin:0}.brand small{color:var(--muted)}
+.balance{background:rgba(109,93,252,.16);border:1px solid rgba(138,125,255,.3);padding:8px 11px;border-radius:14px;font-weight:800}
+.content{padding:16px}
+.view{display:none}.view.active{display:block}
+.hero{padding:18px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,rgba(109,93,252,.2),rgba(255,255,255,.035));box-shadow:var(--shadow)}
+.hero h2{margin:0 0 6px;font-size:26px}.hero p{margin:0;color:var(--muted);line-height:1.45}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{padding:13px;border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:17px}.stat b{display:block;font-size:18px}.stat span{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:15px;box-shadow:var(--shadow)}
+.mode{position:relative;overflow:hidden}.mode .icon{font-size:28px}.mode h3{margin:7px 0 3px}.mode p{margin:0;color:var(--muted);font-size:12px}.mode button{margin-top:12px;width:100%}
+.btn{padding:11px 14px;border-radius:13px;background:var(--primary);color:#fff;font-weight:800}.btn.secondary{background:var(--panel2);border:1px solid var(--line)}.btn.green{background:var(--green);color:#06140d}.btn.warn{background:var(--yellow);color:#251b00}.btn.danger{background:var(--red);color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}.section-title h3{margin:0}.section-title span{font-size:12px;color:var(--muted)}
+.progress{height:8px;background:#202a43;border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2));border-radius:99px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.muted{color:var(--muted)}.tiny{font-size:12px}
+.list{display:grid;gap:10px}.list-item{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--line);background:var(--panel);border-radius:16px}.list-item .grow{flex:1}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(12,17,32,.94);backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:8px max(8px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center}
+.nav-inner{width:min(720px,100%);display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.nav button{background:transparent;color:var(--muted);padding:8px 2px;border-radius:12px;font-size:11px}.nav button.active{color:#fff;background:rgba(109,93,252,.18)}.nav b{display:block;font-size:19px;margin-bottom:2px}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.66);display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}.sheet{width:min(720px,100%);max-height:92vh;overflow:auto;background:#10172a;border-radius:24px 24px 0 0;padding:18px;border-top:1px solid var(--line)}
+.close{float:right;background:#26314b;color:#fff;border-radius:50%;width:34px;height:34px}
+.level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}.level{padding:10px 4px;border-radius:11px;background:#202a43;color:#fff;font-weight:800}.level.done{background:#164e3a}.level.current{outline:2px solid var(--primary)}.level.locked{opacity:.35}
+.game-head{display:flex;justify-content:space-between;align-items:center}.game-word{font-size:35px;letter-spacing:6px;text-align:center;margin:28px 0 10px;font-weight:900;word-break:break-word}.game-hint{min-height:24px;text-align:center;color:var(--muted);margin-bottom:18px}.gap-inputs{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}.gap-inputs input{width:48px;height:52px;text-align:center;font-size:24px;font-weight:900;text-transform:lowercase;background:#0b1020;color:#fff;border:1px solid #34405e;border-radius:13px}.game-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+input,select{width:100%;background:#0b1020;color:#fff;border:1px solid #34405e;border-radius:12px;padding:12px;outline:none}.form{display:grid;gap:11px}.form label{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;z-index:100;background:#f7f8fc;color:#10172a;padding:11px 16px;border-radius:13px;font-weight:800;transition:.25s;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.spin-wheel{width:210px;height:210px;border-radius:50%;margin:18px auto;background:conic-gradient(#6d5dfc 0 25%,#21c77a 25% 50%,#ffbf47 50% 75%,#ff5d73 75% 100%);border:10px solid #26314b;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px #111a2e}.spin-wheel span{width:82px;height:82px;background:#10172a;border-radius:50%;display:grid;place-items:center;font-weight:900}
+@media(max-width:420px){.grid{grid-template-columns:1fr}.level-grid{grid-template-columns:repeat(5,1fr)}.game-word{font-size:29px}.gap-inputs input{width:44px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="brand">
+    <div><h1>🧩 Missing Words</h1><small>Telegram Mini App</small></div>
+    <div class="balance">🪙 <span id="coinsTop">0</span></div>
+  </div>
+</header>
+
+<main class="content">
+<section id="home" class="view active">
+  <div class="hero">
+    <h2>Complete the missing letters</h2>
+    <p>Choose a difficulty, solve the word, earn coins and use your rewards for withdrawals.</p>
+    <div class="stats">
+      <div class="stat"><b id="lifeText">5/5</b><span>❤️ Lives</span><div id="lifeRegenText" class="tiny muted" style="margin-top:4px">Full</div></div>
+      <div class="stat"><b id="hintText">3</b><span>💡 Hints today</span></div>
+      <div class="stat"><b id="adsText">0/10</b><span>📺 Life ads</span></div>
+    </div>
+  </div>
+  <div class="section-title"><h3>🎮 Game Modes</h3><span>100 levels each</span></div>
+  <div class="grid" id="modeGrid"></div>
+
+  <div class="section-title"><h3>🎁 Daily Rewards</h3></div>
+  <div class="card">
+    <div class="row"><div><b>Daily Bonus</b><div class="tiny muted">150 coins every day</div></div><button id="dailyBtn" class="btn green" onclick="claimDaily()">Claim 150</button></div>
+  </div>
+
+  <div class="section-title"><h3>🤝 Referral</h3></div>
+  <div class="card">
+    <div class="row"><div><b>Earn 1,000 coins</b><div class="tiny muted">A referral becomes successful after the invited user earns 1,000 coins.</div></div></div>
+    <div style="margin-top:12px" class="row"><input id="refLink" readonly value=""><button class="btn" onclick="copyReferral()">Copy</button></div>
+    <div style="margin-top:10px" class="progress"><i id="refProgress" style="width:0%"></i></div>
+    <div class="tiny muted" style="margin-top:6px"><span id="refCount">0</span> successful referrals</div>
+  </div>
+</section>
+
+<section id="games" class="view">
+  <div class="hero"><h2>🧩 Missing Words</h2><p>Fill the missing letters. One game costs one life. ❤️ 1 life regenerates every 60 minutes.</p></div>
+  <div class="grid" id="gameModes"></div>
+</section>
+
+<section id="rewards" class="view">
+  <div class="section-title"><h3>🎁 Rewards</h3></div>
+  <div class="list">
+    <div class="list-item"><div>🎁</div><div class="grow"><b>Daily Bonus</b><div class="tiny muted">150 coins per day</div></div><button id="dailyBtn2" class="btn green" onclick="claimDaily()">Claim</button></div>
+    <div class="list-item"><div>🎡</div><div class="grow"><b>Lucky Spin</b><div class="tiny muted">Once every 4 hours</div></div><button class="btn" onclick="openSpin()">Spin</button></div>
+    <div class="list-item"><div>📺</div><div class="grow"><b>Watch Ad — Free Life</b><div class="tiny muted">Up to 10 times per day</div></div><button class="btn secondary" onclick="watchLifeAd()">Watch</button></div>
+    <div class="list-item"><div>💡</div><div class="grow"><b>Extra Hint</b><div class="tiny muted">1 hint = 5 coins</div></div><button class="btn secondary" onclick="buyHint()">Buy</button></div>
+  </div>
+  <div class="section-title"><h3>🏆 Achievements</h3></div>
+  <div id="achievements" class="list"></div>
+</section>
+
+<section id="withdraw" class="view">
+  <div class="hero"><h2>💸 Withdrawal</h2><p>Exchange rate: <b>10,000 coins = $1</b>. Minimum withdrawal: <b>5,000 coins</b>. Fulfillment rules can be configured by the backend.</p></div>
+  <div class="card" style="margin-top:14px">
+    <div class="row"><span class="muted">Available balance</span><b>🪙 <span id="withdrawCoins">0</span></b></div>
+    <div class="row" style="margin-top:8px"><span class="muted">USD value</span><b>$<span id="withdrawUsd">0.00</span></b></div>
+  </div>
+  <div class="section-title"><h3>Choose withdrawal method</h3></div>
+  <div class="grid">
+    <button class="card mode" onclick="openWithdraw('FaucetPay')"><div class="icon">💧</div><h3>FaucetPay</h3><p>Crypto withdrawal</p></button>
+    <button class="card mode" onclick="openWithdraw('ABA Bank')"><div class="icon">🏦</div><h3>ABA Bank</h3><p>Bank payout request</p></button>
+    <button class="card mode" onclick="openWithdraw('Mobile Legends')"><div class="icon">🎮</div><h3>MLBB Diamonds</h3><p>Mobile Legends top-up</p></button>
+  </div>
+  <div class="section-title"><h3>Withdrawal history</h3></div>
+  <div id="withdrawHistory" class="list"><div class="card tiny muted">No withdrawal requests yet.</div></div>
+</section>
+
+<section id="profile" class="view">
+  <div class="hero"><h2>👤 Profile</h2><p id="profileText">Telegram player</p></div>
+  <div class="section-title"><h3>📊 Progress</h3></div>
+  <div id="progressCards" class="list"></div>
+  <div class="section-title"><h3>⚙️ Settings</h3></div>
+  <div class="list">
+    <button class="list-item" onclick="resetDemo()"><div>♻️</div><div class="grow"><b>Reset demo data</b><div class="tiny muted">Only for testing this frontend</div></div><span>›</span></button>
+  </div>
+</section>
+</main>
+</div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="active" data-view="home" onclick="showView('home')"><b>🏠</b>Home</button>
+    <button data-view="games" onclick="showView('games')"><b>🧩</b>Games</button>
+    <button data-view="rewards" onclick="showView('rewards')"><b>🎁</b>Rewards</button>
+    <button data-view="withdraw" onclick="showView('withdraw')"><b>💸</b>Withdraw</button>
+    <button data-view="profile" onclick="showView('profile')"><b>👤</b>Profile</button>
+  </div>
+</nav>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+const WORD_BANK = ["that","with","from","which","were","this","they","have","said","what","there","their","when","been","them","into","more","pierre","would","prince","only","could","will","then","some","time","after","other","about","such","before","very","should","over","your","these","natasha","than","those","well","first","andrew","himself","down","face","upon","like","french","same","know","without","went","made","little","long","states","came","where","under","room","must","even","eyes","come","still","princess","being","most","thought","people","life","again","another","away","general","hand","left","through","began","great","also","asked","rostov","while","just","army","looked","american","count","back","good","whole","shall","head","moscow","right","mary","part","government","felt","seemed","here","something","having","place","much","state","house","against","between","every","though","nothing","emperor","heard","nicholas","because","young","bone","take","disease","many","always","napoleon","never","three","skin","tissue","took","years","once","look","last","united","think","round","found","blood","power","might","father","kutuzov","both","usually","small","give","side","form","make","during","quite","turned","door","countess","knew","suddenly","tell","told","looking","whom","already","moment","love","large","holmes","chapter","treatment","officer","voice","russian","words","hands","cases","days","among","everything","called","dear","sonya","congress","seen","often","gave","battle","history","case","taken","denisov","position","however","done","smile","sometimes","country","free","soon","understand","each","known","soldiers","others","become","brought","along","order","especially","behind","women","course","result","night","patient","stood","joint","work","anything","cause","going","evidently","several","president","less","passed","wife","infection","matter","given","feeling","world","certain","chief","front","does","action","whether","white","question","movement","condition","herself","mind","possible","alone","body","morning","horse","later","toward","death","dolokhov","followed","present","labor","necessary","money","almost","open","until","woman","nerve","want","expression","things","replied","sent","troops","half","south","business","officers","became","within","mother","england","commander","year","taking","themselves","wound","pain","thing","number","leave","america","above","added","party","word","parts","table","home","anna","find","boris","either","near","tissues","enemy","continued","fact","high","letter","four","project","public","common","held","talk","example","west","important","national","cried","friend","carried","entered","received","second","five","land","surface","light","cannot","next","used","glands","different","ever","fire","itself","union","really","twenty","around","early","saying","sitting","best","petya","full","better","british","evening","gutenberg","bones","horses","name","political","road","since","together","thousand","cold","heart","forms","speak","shouted","means","kept","impossible","arms","vessels","line","moved","petersburg","becomes","rose","vasili","wish","conditions","system","drawing","gone","rise","force","third","king","everyone","short","times","black","formed","pressure","hair","clear","fellow","laws","longer","children","remained","help","ready","regiment","forward","hundred","results","military","myself","north","peace","rode","wounded","answered","beyond","crowd","growth","tried","lost","news","anyone","orders","past","point","service","tumour","across","anatole","interest","understood","reached","strange","close","process","rather","read","sound","beside","frequently","happy","opinion","self","spoke","standing","coming","limb","making","opened","presence","trade","till","deep","formation","soldier","affairs","aneurysm","operation","show","wanted","field","raised","thus","english","slavery","family","repeated","stopped","rest","wished","following","happened","perhaps","turning","colonies","seeing","applied","answer","true","muscles","affected","events","neck","occur","period","talking","kind","revolution","able","else","foot","appeared","call","rapidly","associated","german","husband","lower","southern","abscess","terrible","york","least","lymph","returned","russia","spread","company","local","middle","attention","features","noticed","reason","campaign","return","wall","merely","tumours","silent","steps","turn","whose","effect","water","giving","laid","therefore","window","wounds","federal","person","soft","speaking","subject","dinner","size","believe","daughter","doctor","hear","honor","strength","waiting","colonial","placed","quickly","dark","questions","trying","city","hard","street","feet","measures","view","bolkonski","doing","removed","usual","account","brother","civil","fell","foreign","former","lady","paper","child","forces","glanced","nearly","republican","enough","fine","character","closed","town","afraid","court","hardly","severe","single","coat","freedom","please","sides","tears","joints","knee","symptoms","cancer","france","ground","human","meet","nature","seat","syphilis","acute","covered","gangrene","nation","remarked","society","although","artery","changes","neither","rights","soul","strong","spirit","swelling","adjutant","fear","girl","grew","hours","reply","thin","tone","washington","bring","helene","late","pale","according","considered","dead","except","mouth","area","faces","yourself","feel","remember","smiling","clinical","fresh","need","rostovs","someone","village","lesions","plan","special","contrary","smiled","ulcer","attack","hour","members","bagration","bridge","employed","finally","friends","listened","alexander","various","membrane","pass","drew","europe","growing","occurs","takes","doubt","muscle","pavlovna","primary","command","convention","described","syphilitic","appear","change","george","glad","causes","decided","hope","john","nerves","powers","relations","showed","voices","wrote","difficult","ordered","russians","secondary","terms","virginia","drawn","fixed","probably","direction","fingers","killed","liable","lips","minutes","opening","says","unable","complete","frightened","governor","natural","struck","capital","holding","sister","smoke","staff","study","beginning","blue","carriage","colonel","greater","happiness","loss","moving","keep","declared","direct","firm","idea","master","method","remain","serious","running","consists","group","heavy","increased","indeed","pleasure","relation","sarcoma","simple","step","camp","dress","further","influence","marked","prepared","alpatych","instead","lead","property","thinking","vessel","diseases","duty","industry","leaders","matters","silence","appearance","chair","expressed","living","manner","march","uncle","changed","chiefly","passing","prevent","seems","veins","besides","lines","popular","slowly","story","term","angry","attended","leaving","lord","produced","seven","activity","observed","office","victory","bourienne","cells","clearly","east","effort","injury","months","upper","dressing","historians","latter","poor","sight","similar","tendon","corner","eight","excellency","live","loved","series","silver","broken","captain","destroyed","divided","everybody","peasants","wait","expected","future","book","gold","jefferson","organisms","shoulders","thoughts","ball","danger","fall","rostopchin","straight","tariff","explain","kissed","resulting","sure","thirty","uniform","control","easy","finger","portion","pressed","prisoners","asking","chronic","majority","occurred","purpose","rule","arrived","clock","economic","filled","health","produce","remembered","certainly","commerce","election","individual","persons","presented","ulcers","articular","distance","exclaimed","interests","legs","lying","meeting","quiet","church","earth","follow","generals","handsome","houses","importance","mamma","post","region","section","spite","weeks","western","written","affair","glass","occupied","policy","politics","seem","shoulder","vein","bacteria","below","increase","laughing","leading","meaning","movements","note","ought","suffrage","truth","bright","diagnosis","drove","easily","hold","papers","reading","rushed","seized","senate","slight","territory","whatever","division","lived","marya","meant","shown","sleep","treaty","advanced","farmers","guns","miss","pyogenic","river","suffering","tomorrow","event","royal","spent","varieties","balashev","difficulty","evident","miles","none","outside","passage","railways","regarded","save","settled","vote","bank","citizens","main","normal","shouting","solution","appears","borodino","equal","experience","injuries","letters","plain","removal","stage","enter","hill","involved","married","surprise","care","floor","forty","healing","hussars","infected","paid","value","wilson","aside","dmitrievna","talked","thank","wide","cartilage","directly","showing","support","surrounded","carry","connection","efforts","ends","farther","fibrous","figure","ladies","nations","nose","object","progress","sense","wrong","caused","dressed","frenchman","knows","lesion","majesty","ordinary","real","smolensk","instant","issue","larger","laughed","mass","move","sherlock","authority","connective","discharge","external","flank","fluid","galloped","gentlemen","grown","learned","listen","path","population","walked","begun","bill","european","extent","gentleman","happen","parties","send","sign","stop","works","absence","avoid","beautiful","bent","berg","consider","fate","glancing","industrial","mean","notice","ranks","signs","synovial","begin","carolina","democracy","knowing","sake","source","whispered","active","break","cavity","chance","cross","desire","escape","fight","finished","imagine","marriage","mucous","northern","opposition","pleasant","rapid","reaction","readily","started","tenderness","threw","advance","bound","broke","closely","colour","completely","higher","marry","multiple","play","pleased","practice","receive","shot","treated","week","bonaparte","cannon","degree","fifty","gazed","police","retreat","sounds","unless","adjacent","century","democrats","despite","guards","hearing","hills","measure","original","private","soil","success","thousands","today","amount","bodies","broad","dangerous","elbow","essential","getting","internal","jackson","methods","ohio","particular","proposed","required","rich","slaves","spoken","thrown","allow","appointed","boots","calm","comes","composed","generally","glance","official","personal","roosevelt","simply","sort","caught","entirely","firing","loose","pointed","porch","acts","amendment","believed","directed","gradually","gray","huge","listening","places","scar","sought","stand","estate","gives","indicated","looks","malignant","pointing","provided","servants","tender","wood","accepted","affections","asleep","carrying","contact","ebook","engaged","express","maid","offered","rays","regard","report","shock","situation","type","unknown","wearing","allowed","articles","bear","breast","drive"];
+const MODES = {
+  easy:{name:"Easy",gaps:1,reward:5,icon:"🟢"},
+  medium:{name:"Medium",gaps:2,reward:6,icon:"🔵"},
+  hard:{name:"Hard",gaps:3,reward:8,icon:"🟠"},
+  difficult:{name:"Difficult",gaps:4,reward:10,icon:"🔴"}
+};
+const MAX_LIVES=5, LIFE_MS=60*60*1000, SPIN_MS=4*60*60*1000, COIN_USD=10000;
+const KEY="missingWordsDemoV1";
+let state=JSON.parse(localStorage.getItem(KEY)||"null")||{
+  coins:0,lives:5,lastLife:Date.now(),levels:{easy:1,medium:1,hard:1,difficult:1},
+  daily:0,spin:0,hints:3,hintDay:"",lifeAds:0,adDay:"",referrals:0,refProgress:0,
+  stats:{games:0,ads:0},ach:{},withdrawals:[]
+};
+function save(){localStorage.setItem(KEY,JSON.stringify(state));renderAll()}
+function today(){return new Date().toISOString().slice(0,10)}
+function ensureDaily(){
+  if(state.hintDay!==today()){state.hintDay=today();state.hints=3}
+  if(state.adDay!==today()){state.adDay=today();state.lifeAds=0}
+}
+function regenLives(){
+  const now=Date.now();
+  if(state.lives<MAX_LIVES){
+    // Exactly 1 life is regenerated every 60 minutes.
+    const elapsed=Math.max(0,now-state.lastLife);
+    const gained=Math.floor(elapsed/LIFE_MS);
+    if(gained>0){
+      const newLives=Math.min(MAX_LIVES,state.lives+gained);
+      const actualGained=newLives-state.lives;
+      state.lives=newLives;
+      state.lastLife+=actualGained*LIFE_MS;
+      if(state.lives>=MAX_LIVES) state.lastLife=now;
+    }
+  }else{
+    state.lastLife=now;
+  }
+}
+
+function lifeRegenText(){
+  if(state.lives>=MAX_LIVES) return "Full";
+  const remaining=Math.max(0,LIFE_MS-(Date.now()-state.lastLife));
+  return "Next ❤️ in "+fmt(remaining);
+}
+function renderAll(){
+  ensureDaily();regenLives();
+  document.getElementById("coinsTop").textContent=state.coins.toLocaleString();
+  document.getElementById("lifeText").textContent=state.lives+"/"+MAX_LIVES;
+  document.getElementById("lifeRegenText").textContent=lifeRegenText();
+  document.getElementById("hintText").textContent=state.hints;
+  document.getElementById("adsText").textContent=state.lifeAds+"/10";
+  document.getElementById("withdrawCoins").textContent=state.coins.toLocaleString();
+  document.getElementById("withdrawUsd").textContent=(state.coins/COIN_USD).toFixed(2);
+  document.getElementById("refCount").textContent=state.referrals;
+  document.getElementById("refProgress").style.width=Math.min(100,state.refProgress/10)+"%";
+  document.getElementById("refLink").value="https://t.me/YourBot/app?startapp=REF-DEMO";
+  const claimed=state.daily===today();
+  document.getElementById("dailyBtn").disabled=claimed;document.getElementById("dailyBtn").textContent=claimed?"Claimed ✓":"Claim 150";
+  document.getElementById("dailyBtn2").disabled=claimed;document.getElementById("dailyBtn2").textContent=claimed?"Claimed ✓":"Claim 150";
+  renderModes();renderAchievements();renderHistory();renderProgress();
+  clearTimeout(window._renderTimer);window._renderTimer=setTimeout(renderAll,1000);
+}
+function renderModes(){
+  const html=Object.entries(MODES).map(([key,m])=>`<div class="card mode"><div class="icon">${m.icon}</div><h3>${m.name}</h3><p>${m.gaps} missing gap${m.gaps>1?"s":""} • 100 levels</p><p style="margin-top:5px">Reward: 🪙 ${m.reward}</p><button class="btn" onclick="startMode('${key}')">Play</button></div>`).join("");
+  document.getElementById("modeGrid").innerHTML=html;document.getElementById("gameModes").innerHTML=html;
+}
+const ACHS=[
+ ["games5","Play 5 games",5,10,"games"],["games10","Play 10 games",10,20,"games"],["games50","Play 50 games",50,100,"games"],
+ ["ads5","Watch 5 ads",5,10,"ads"],["ads10","Watch 10 ads",10,20,"ads"],["ads50","Watch 50 ads",50,100,"ads"]
+];
+function renderAchievements(){
+ document.getElementById("achievements").innerHTML=ACHS.map(a=>{
+   const [id,title,target,reward,type]=a, val=type==="games"?state.stats.games:state.stats.ads, done=val>=target;
+   return `<div class="list-item"><div>${done?"🏆":"🎯"}</div><div class="grow"><b>${title}</b><div class="tiny muted">${Math.min(val,target)}/${target} • ${reward} coins</div><div class="progress" style="margin-top:7px"><i style="width:${Math.min(100,val/target*100)}%"></i></div></div><button class="btn ${done&&!state.ach[id]?"green":"secondary"}" ${!done||state.ach[id]?"disabled":""} onclick="claimAch('${id}')">${state.ach[id]?"Claimed":done?"Claim":"Locked"}</button></div>`;
+ }).join("");
+}
+function claimAch(id){const a=ACHS.find(x=>x[0]===id);if(!a||state.ach[id])return;const val=a[4]==="games"?state.stats.games:state.stats.ads;if(val<a[2])return;state.ach[id]=1;state.coins+=a[3];toast("Achievement claimed: +"+a[3]+" coins");save()}
+function renderHistory(){
+ const el=document.getElementById("withdrawHistory");
+ el.innerHTML=state.withdrawals.length?state.withdrawals.slice().reverse().map(x=>`<div class="list-item"><div>💸</div><div class="grow"><b>${x.method}</b><div class="tiny muted">${new Date(x.date).toLocaleString()} • ${x.amount.toLocaleString()} coins</div></div><span class="tiny">${x.status}</span></div>`).join(""):`<div class="card tiny muted">No withdrawal requests yet.</div>`;
+}
+function renderProgress(){
+ document.getElementById("progressCards").innerHTML=Object.entries(MODES).map(([k,m])=>`<div class="card"><div class="row"><b>${m.icon} ${m.name}</b><span>Level ${Math.min(state.levels[k],100)}/100</span></div><div class="progress" style="margin-top:9px"><i style="width:${Math.min(100,(state.levels[k]-1))}%"></i></div></div>`).join("");
+}
+function showView(id){
+ document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");
+ document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));window.scrollTo(0,0);renderAll();
+}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(window._toast);window._toast=setTimeout(()=>t.classList.remove("show"),2200)}
+function openModal(html){document.getElementById("sheet").innerHTML=html;document.getElementById("modal").classList.add("show")}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+function claimDaily(){ensureDaily();if(state.daily===today())return;state.daily=today();state.coins+=150;toast("Daily bonus: +150 coins 🎉");save()}
+function copyReferral(){navigator.clipboard?.writeText(document.getElementById("refLink").value);toast("Referral link copied")}
+function openSpin(){
+ const wait=Math.max(0,state.spin+SPIN_MS-Date.now());
+ if(wait>0){toast("Spin available in "+fmt(wait));return}
+ openModal(`<button class="close" onclick="closeModal()">×</button><h2>🎡 Lucky Spin</h2><p class="muted">One spin every 4 hours.</p><div class="spin-wheel"><span>SPIN</span></div><button class="btn" style="width:100%" onclick="doSpin()">Spin Now</button><p class="tiny muted">Rewards: 10 coins • 1 life • 2 lives • 20 coins</p>`);
+}
+function doSpin(){
+ const rewards=[["coins",10],["life",1],["life",2],["coins",20]],r=rewards[Math.floor(Math.random()*rewards.length)];
+ state.spin=Date.now();
+ if(r[0]==="coins")state.coins+=r[1];else state.lives=Math.min(MAX_LIVES,state.lives+r[1]);
+ toast(r[0]==="coins"?`Lucky Spin: +${r[1]} coins!`:`Lucky Spin: +${r[1]} life!`);closeModal();save();
+}
+function buyHint(){if(state.coins<5){toast("You need 5 coins");return}state.coins-=5;state.hints++;toast("Purchased 1 hint for 5 coins");save()}
+function watchAd(kind="life"){
+ // Demo Adsgram hook: replace this function with your verified Adsgram rewarded-ad call.
+ state.stats.ads++;
+ if(kind==="life"){
+   if(state.lifeAds>=10){toast("Daily life-ad limit reached");return}
+   state.lifeAds++;state.lives=Math.min(MAX_LIVES,state.lives+1);toast("Ad completed: +1 life");
+ }else{state.hints++;toast("Ad completed: +1 hint")}
+ save();
+}
+function watchLifeAd(){watchAd("life")}
+function useHint(){
+ if(state.hints<=0){if(state.coins>=5){buyHint()}else{openModal(`<button class="close" onclick="closeModal()">×</button><h2>💡 No hints left</h2><p class="muted">Watch an ad for 1 hint or exchange 5 coins for 1 hint.</p><button class="btn" style="width:100%;margin-top:12px" onclick="watchAd('hint');closeModal()">📺 Watch Ad</button>`)}return}
+ state.hints--;game.hintUsed=true;game.revealOne();toast("Hint used");save()
+}
+function fmt(ms){let s=Math.ceil(ms/1000),h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60);s%=60;return h?`${h}h ${m}m`:m?`${m}m ${s}s`:`${s}s`}
+function startMode(mode){
+ regenLives();if(state.lives<=0){openModal(`<button class="close" onclick="closeModal()">×</button><h2>❤️ No lives</h2><p class="muted">A new life regenerates automatically every 60 minutes. You can also watch an ad for a free life (10/day).</p><button class="btn" style="width:100%" onclick="watchLifeAd();closeModal()">📺 Watch Ad</button>`);return}
+ const level=Math.min(state.levels[mode],100);
+ openLevels(mode,level);
+}
+function openLevels(mode,current){
+ const m=MODES[mode];
+ openModal(`<button class="close" onclick="closeModal()">×</button><h2>${m.icon} ${m.name}</h2><p class="muted">${m.gaps} missing gap${m.gaps>1?"s":""} • ${m.reward} coins per completed game</p><div class="level-grid">${Array.from({length:100},(_,i)=>{let n=i+1,locked=n>state.levels[mode];return `<button class="level ${n<state.levels[mode]?"done":n===state.levels[mode]?"current":""} ${locked?"locked":""}" ${locked?"disabled":""} onclick="beginGame('${mode}',${n})">${n}</button>`}).join("")}</div>`);
+}
+let game={};
+function beginGame(mode,level){
+ regenLives();if(state.lives<=0){toast("No lives available");return}
+ state.lives--;if(state.lives<MAX_LIVES&&state.lastLife===0)state.lastLife=Date.now();
+ closeModal();
+ const word=WORD_BANK[(level*97+Object.keys(MODES).indexOf(mode)*211)%WORD_BANK.length];
+ const gaps=chooseGaps(word,MODES[mode].gaps);
+ game={mode,level,word,gaps,hintUsed:false,revealed:[]};
+ openGame();
+ save();
+}
+function chooseGaps(word,count){
+ const indexes=[...word].map((_,i)=>i);
+ // Prefer non-first positions so the word remains recognizable.
+ const pool=indexes.filter(i=>i>0&&i<word.length-1);
+ for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+ return pool.slice(0,Math.min(count,word.length-2)).sort((a,b)=>a-b);
+}
+function masked(){
+ return [...game.word].map((c,i)=>game.gaps.includes(i)&&!game.revealed.includes(i)?"_":c).join(" ");
+}
+function openGame(){
+ const inputs=game.gaps.map((idx,k)=>game.revealed.includes(idx)?`<input value="${game.word[idx]}" disabled>`:`<input maxlength="1" data-gap="${idx}" autocomplete="off">`).join("");
+ openModal(`<div class="game-head"><div><b>${MODES[game.mode].icon} ${MODES[game.mode].name}</b><div class="tiny muted">Level ${game.level}/100</div></div><div>❤️ ${state.lives}</div></div>
+ <div class="game-word">${masked()}</div><div class="game-hint" id="gameHint">Fill the missing letters.</div>
+ <div class="gap-inputs">${inputs}</div>
+ <div class="game-actions"><button class="btn secondary" onclick="useHint()">💡 Hint (${state.hints})</button><button class="btn green" onclick="submitGame()">Check Word</button></div>
+ <button class="btn secondary" style="width:100%;margin-top:9px" onclick="closeModal()">Exit</button>`);
+ const first=document.querySelector(".gap-inputs input:not([disabled])");first?.focus();
+}
+function revealOne(){
+ const hidden=game.gaps.filter(i=>!game.revealed.includes(i));
+ if(!hidden.length)return;
+ game.revealed.push(hidden[Math.floor(Math.random()*hidden.length)]);
+ openGame();
+}
+function submitGame(){
+ const inputs=[...document.querySelectorAll(".gap-inputs input")];
+ const answer={};
+ inputs.forEach((el,i)=>{const idx=game.gaps[i];answer[idx]=(el.value||"").toLowerCase()});
+ const ok=game.gaps.every(idx=>game.revealed.includes(idx)||answer[idx]===game.word[idx]);
+ if(!ok){toast("Not quite — check the missing letters.");return}
+ const reward=MODES[game.mode].reward;
+ state.coins+=reward;state.stats.games++;
+ if(game.level===state.levels[game.mode]&&game.level<100)state.levels[game.mode]++;
+ const next=game.level<100?game.level+1:100;
+ openModal(`<h2>🎉 Correct!</h2><p>You completed <b>${game.word}</b>.</p><div class="card" style="text-align:center;margin:12px 0">+${reward} 🪙</div>
+ <button class="btn green" style="width:100%" onclick="doubleReward()">📺 Watch Ad to Double Reward</button>
+ <button class="btn" style="width:100%;margin-top:9px" onclick="closeModal()">Continue</button>`);
+ game.completedReward=reward;game.doubleClaimed=false;save();
+}
+function doubleReward(){
+ if(game.doubleClaimed)return;game.doubleClaimed=true;state.coins+=game.completedReward;state.stats.ads++;toast("Ad completed: reward doubled!");save();closeModal();
+}
+function openWithdraw(method){
+ const fields=method==="FaucetPay"?`<label>FaucetPay email / wallet<input id="wdAccount" placeholder="Enter FaucetPay account"></label>`:
+ method==="ABA Bank"?`<label>ABA account name<input id="wdName" placeholder="Account name"></label><label>ABA account number<input id="wdAccount" placeholder="ABA account number"></label>`:
+ `<label>MLBB User ID<input id="wdId" placeholder="Mobile Legends User ID"></label><label>Zone ID<input id="wdZone" placeholder="Zone ID"></label>`;
+ openModal(`<button class="close" onclick="closeModal()">×</button><h2>💸 ${method}</h2><p class="muted">10,000 coins = $1. Minimum withdrawal is 5,000 coins. Enter the amount of coins to request.</p><div class="form">${fields}<label>Coins to withdraw<input id="wdAmount" type="number" min="5000" step="1000" value="5000"></label><button class="btn green" onclick="submitWithdraw('${method}')">Submit Withdrawal</button></div><p class="tiny muted" style="margin-top:12px">Demo frontend only. The production backend must verify balance, identity, payout destination and transaction status.</p>`);
+}
+function submitWithdraw(method){
+ const amount=Number(document.getElementById("wdAmount").value||0);
+ if(!Number.isFinite(amount)||amount<5000||amount>state.coins){toast("Invalid withdrawal amount");return}
+ if(method==="FaucetPay"&&!document.getElementById("wdAccount").value.trim())return toast("Enter your FaucetPay account");
+ if(method==="ABA Bank"&&(!document.getElementById("wdName").value.trim()||!document.getElementById("wdAccount").value.trim()))return toast("Complete ABA details");
+ if(method==="Mobile Legends"&&(!document.getElementById("wdId").value.trim()||!document.getElementById("wdZone").value.trim()))return toast("Enter MLBB User ID and Zone ID");
+ state.coins-=amount;state.withdrawals.push({method,amount,date:Date.now(),status:"Pending"});toast("Withdrawal request submitted");closeModal();showView("withdraw");save();
+}
+function resetDemo(){if(confirm("Reset all demo data?")){localStorage.removeItem(KEY);location.reload()}}
+window.addEventListener("load",()=>{ensureDaily();renderAll()});
+</script>
+</body>
+</html>
